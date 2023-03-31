@@ -33,8 +33,12 @@ public class Cliente {
     @Column(nullable = false)
     private String nome;
 
+    @Email
+    @Column(nullable = false, unique = true)
+    private String email;
+
     @CPF
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String cpf;
 
     @Column(nullable = false)

@@ -5,8 +5,13 @@ import br.com.cliente.Cliente.model.request.ClienteRequest;
 import br.com.cliente.Cliente.model.response.ClienteResponse;
 import br.com.cliente.Cliente.repository.ClienteRepository;
 import br.com.cliente.Cliente.service.ClienteService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -16,20 +21,23 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteResponse criar(ClienteRequest clienteRequest) {
-
-        Cliente cliente = new Cliente();
-        cliente.setNome(clienteRequest.getNome());
-        cliente.setCpf(clienteRequest.getCpf());
-        cliente.setTelefone(clienteRequest.getTelefone());
-
+        Cliente cliente = ClienteRequest.toCliente(clienteRequest);
         clienteRepository.save(cliente);
+        return ClienteResponse.toClienteResponse(cliente);
+    }
+    @Override
+    public List<ClienteResponse> pesquisarCliente() {
+        return ClienteResponse.toClienteResponseList(clienteRepository.findAll());
+    }
+    @Transactional
+    @Override
+    public void delete(String email) {
+        Cliente cliente = getCliente(email);
+        clienteRepository.delete(cliente);
+    }
 
-        ClienteResponse clienteResponse = ClienteResponse.builder()
-                .nome(cliente.getNome())
-                .telefone(cliente.getTelefone())
-                .build();
-
-        return clienteResponse;
-
+    private Cliente getCliente(String email) {
+        return clienteRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cliente não encontrado"));
     }
 }
